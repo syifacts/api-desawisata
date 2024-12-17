@@ -20,24 +20,28 @@ const init = async () => {
         host: '0.0.0.0',
     });
 
-// Register CORS middleware
-server.ext('onPreResponse', (request, h) => {
-    const response = request.response;
+    // Register CORS middleware
+    server.ext('onPreResponse', (request, h) => {
+        const response = request.response;
 
-    if (response.isBoom) {
-        // If the response is an error, we can still set CORS headers
-        response.output.headers['Access-Control-Allow-Origin'] = '*';
-        response.output.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE';
-        response.output.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-    } else {
-        // For successful responses
-        response.headers['Access-Control-Allow-Origin'] = '*';
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE';
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-    }
+        // Menangani preflight request (OPTIONS)
+        if (request.method === 'options') {
+            return h.response().code(204); // Status OK tanpa body untuk preflight
+        }
 
-    return h.continue;
-});
+        // Set header CORS
+        if (response.isBoom) {
+            response.output.headers['Access-Control-Allow-Origin'] = '*';
+            response.output.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+            response.output.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+        } else {
+            response.headers['Access-Control-Allow-Origin'] = '*';
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+        }
+
+        return h.continue;
+    });
 
     // Register routes
     server.route(agrowisataRoutes);
