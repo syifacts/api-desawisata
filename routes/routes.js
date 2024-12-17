@@ -91,6 +91,11 @@ const postReview = async (request, h) => {
     return h.response({ message: 'Semua field ulasan wajib diisi!' }).code(400);
   }
 
+  // Memastikan userId adalah ObjectId yang valid
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return h.response({ message: 'User ID tidak valid!' }).code(400);
+  }
+
   try {
     const desaWisata = await DesaWisata.findById(id);
     if (!desaWisata) {
@@ -98,7 +103,7 @@ const postReview = async (request, h) => {
     }
 
     // Menambahkan ulasan dengan userId
-    desaWisata.reviews.push({ reviewText, rating, userId });
+    desaWisata.reviews.push({ reviewText, rating, userId: mongoose.Types.ObjectId(userId) });
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully', reviews: desaWisata.reviews }).code(201);
@@ -112,17 +117,20 @@ const getReviews = async (request, h) => {
   const { id } = request.params;
 
   try {
-    const desaWisata = await DesaWisata.findById(id);
+    const desaWisata = await DesaWisata.findById(id).populate('reviews.userId', 'name email'); // Populate userId
+
     if (!desaWisata) {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    // Menampilkan ulasan dengan userId
-    const reviewsWithUserId = desaWisata.reviews.map(({ reviewText, rating, userId }) => ({
-      reviewText, rating, userId
+    // Menampilkan ulasan dengan informasi lengkap tentang user
+    const reviewsWithUserDetails = desaWisata.reviews.map(({ reviewText, rating, userId }) => ({
+      reviewText,
+      rating,
+      user: userId ? { name: userId.name, email: userId.email } : null // Menampilkan data user
     }));
 
-    return h.response({ reviews: reviewsWithUserId }).code(200);
+    return h.response({ reviews: reviewsWithUserDetails }).code(200);
   } catch (err) {
     return h.response({ message: 'Error fetching reviews', error: err.message }).code(500);
   }
