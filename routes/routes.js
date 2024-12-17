@@ -84,10 +84,10 @@ const deleteDesaWisata = async (request, h) => {
 // POST - Menambahkan ulasan ke desa wisata
 const postReview = async (request, h) => {
   const { id } = request.params;
-  const { reviewText, rating } = request.payload;
+  const { reviewText, rating, userId } = request.payload; // Menambahkan userId
 
   // Validasi input
-  if (!reviewText || !rating) {
+  if (!reviewText || !rating || !userId) {
     return h.response({ message: 'Semua field ulasan wajib diisi!' }).code(400);
   }
 
@@ -97,8 +97,8 @@ const postReview = async (request, h) => {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    // Menambahkan ulasan tanpa reviewerName
-    desaWisata.reviews.push({ reviewText, rating });
+    // Menambahkan ulasan dengan userId
+    desaWisata.reviews.push({ reviewText, rating, userId });
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully', reviews: desaWisata.reviews }).code(201);
@@ -106,7 +106,6 @@ const postReview = async (request, h) => {
     return h.response({ message: 'Error adding review', error: err.message }).code(500);
   }
 };
-
 
 // GET - Mengambil semua ulasan dari desa wisata
 const getReviews = async (request, h) => {
@@ -118,12 +117,12 @@ const getReviews = async (request, h) => {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    // Tampilkan ulasan tanpa reviewerName
-    const reviewsWithoutReviewerName = desaWisata.reviews.map(({ reviewText, rating }) => ({
-      reviewText, rating
+    // Menampilkan ulasan dengan userId
+    const reviewsWithUserId = desaWisata.reviews.map(({ reviewText, rating, userId }) => ({
+      reviewText, rating, userId
     }));
 
-    return h.response({ reviews: reviewsWithoutReviewerName }).code(200);
+    return h.response({ reviews: reviewsWithUserId }).code(200);
   } catch (err) {
     return h.response({ message: 'Error fetching reviews', error: err.message }).code(500);
   }
