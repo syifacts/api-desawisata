@@ -98,7 +98,7 @@ const getReviews = async (request, h) => {
 const postReview = async (request, h) => {
   const { id } = request.params;
   const { review, rating } = request.payload;
-  const username = request.auth.credentials.username; // Ambil username dari sesi pengguna
+  const { username, userId } = request.auth.credentials; // Ambil username dan userId dari request.auth.credentials
 
   if (!review || !rating) {
     return h.response({ message: 'Review dan rating wajib diisi!' }).code(400);
@@ -110,7 +110,7 @@ const postReview = async (request, h) => {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    desaWisata.reviews.push({ username, review, rating });
+    desaWisata.reviews.push({ username, userId, review, rating }); // Menambahkan ulasan dengan username dan userId
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully', reviews: desaWisata.reviews }).code(201);
@@ -118,6 +118,7 @@ const postReview = async (request, h) => {
     return h.response({ message: 'Error adding review', error: err.message }).code(500);
   }
 };
+
 
 // DELETE - Menghapus ulasan berdasarkan reviewId
 const deleteReview = async (request, h) => {
