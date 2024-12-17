@@ -151,12 +151,12 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/desawisata/reviews',
+    path: '/desawisata/{id}/reviews',
     handler: postReview,
   },
   {
     method: 'GET',
-    path: '/desawisata/reviews',
+    path: '/desawisata/{id}/reviews',
     handler: getReviews,
   },
 ];
