@@ -1,6 +1,5 @@
 const DesaWisata = require('../models/desawisata');
 
-
 // GET - Mengambil semua data desa wisata
 const getDesaWisata = async (request, h) => {
   try {
@@ -54,8 +53,9 @@ const putDesaWisata = async (request, h) => {
   }
 
   try {
-    const updatedDesaWisata = await DesaWisata.findByIdAndUpdate(id, 
-      { name, location, photo, description, longdesc, urlvid }, 
+    const updatedDesaWisata = await DesaWisata.findByIdAndUpdate(
+      id,
+      { name, location, photo, description, longdesc, urlvid },
       { new: true }
     );
     if (!updatedDesaWisata) {
@@ -78,6 +78,73 @@ const deleteDesaWisata = async (request, h) => {
     return h.response({ message: 'Data deleted successfully' }).code(200);
   } catch (err) {
     return h.response({ message: 'Error deleting data', error: err.message }).code(500);
+  }
+};
+
+// POST - Menambahkan ulasan ke desa wisata
+const postReview = async (request, h) => {
+  const { id } = request.params;
+  const { reviewerName, reviewText, rating } = request.payload;
+
+  // Validasi input
+  if (!reviewerName || !reviewText || !rating) {
+    return h.response({ message: 'Semua field ulasan wajib diisi!' }).code(400);
+  }
+
+  try {
+    const desaWisata = await DesaWisata.findById(id);
+    if (!desaWisata) {
+      return h.response({ message: 'Desa Wisata not found' }).code(404);
+    }
+
+    // Menambahkan ulasan
+    desaWisata.reviews.push({ reviewerName, reviewText, rating });
+    await desaWisata.save();
+
+    return h.response({ message: 'Review added successfully', reviews: desaWisata.reviews }).code(201);
+  } catch (err) {
+    return h.response({ message: 'Error adding review', error: err.message }).code(500);
+  }
+};
+
+// GET - Mengambil semua ulasan dari desa wisata
+const getReviews = async (request, h) => {
+  const { id } = request.params;
+
+  try {
+    const desaWisata = await DesaWisata.findById(id);
+    if (!desaWisata) {
+      return h.response({ message: 'Desa Wisata not found' }).code(404);
+    }
+
+    return h.response({ reviews: desaWisata.reviews }).code(200);
+  } catch (err) {
+    return h.response({ message: 'Error fetching reviews', error: err.message }).code(500);
+  }
+};
+
+// DELETE - Menghapus ulasan dari desa wisata berdasarkan ID ulasan
+const deleteReview = async (request, h) => {
+  const { id, reviewId } = request.params;
+
+  try {
+    const desaWisata = await DesaWisata.findById(id);
+    if (!desaWisata) {
+      return h.response({ message: 'Desa Wisata not found' }).code(404);
+    }
+
+    const reviewIndex = desaWisata.reviews.findIndex(review => review._id.toString() === reviewId);
+    if (reviewIndex === -1) {
+      return h.response({ message: 'Review not found' }).code(404);
+    }
+
+    // Menghapus ulasan
+    desaWisata.reviews.splice(reviewIndex, 1);
+    await desaWisata.save();
+
+    return h.response({ message: 'Review deleted successfully' }).code(200);
+  } catch (err) {
+    return h.response({ message: 'Error deleting review', error: err.message }).code(500);
   }
 };
 
@@ -106,5 +173,20 @@ module.exports = [
     method: 'DELETE',
     path: '/desawisata/{id}',
     handler: deleteDesaWisata,
+  },
+  {
+    method: 'POST',
+    path: '/desawisata/{id}/reviews',
+    handler: postReview,
+  },
+  {
+    method: 'GET',
+    path: '/desawisata/{id}/reviews',
+    handler: getReviews,
+  },
+  {
+    method: 'DELETE',
+    path: '/desawisata/{id}/reviews/{reviewId}',
+    handler: deleteReview,
   },
 ];
