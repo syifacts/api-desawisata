@@ -1,3 +1,7 @@
+const DesaWisata = mongoose.model('DesaWisata', desaWisataSchema);
+
+module.exports = DesaWisata;
+
 const DesaWisata = require('../models/desawisata');
 
 // GET - Mengambil semua data desa wisata
