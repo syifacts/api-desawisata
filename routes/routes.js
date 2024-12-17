@@ -1,5 +1,3 @@
-import authenticate from '../middleware/auth';
-
 const DesaWisata = require('../models/desawisata');
 
 // GET - Mengambil semua data desa wisata
@@ -86,13 +84,10 @@ const deleteDesaWisata = async (request, h) => {
 // POST - Menambahkan ulasan ke desa wisata
 const postReview = async (request, h) => {
   const { id } = request.params;
-  const { reviewText, rating } = request.payload;
-
-  // Mengambil username dari request.auth.credentials yang sudah terautentikasi
-  const username = request.auth.credentials.username;
+  const { reviewerName, reviewText, rating } = request.payload;
 
   // Validasi input
-  if (!reviewText || !rating) {
+  if (!reviewerName || !reviewText || !rating) {
     return h.response({ message: 'Semua field ulasan wajib diisi!' }).code(400);
   }
 
@@ -103,7 +98,7 @@ const postReview = async (request, h) => {
     }
 
     // Menambahkan ulasan
-    desaWisata.reviews.push({ username, reviewText, rating });
+    desaWisata.reviews.push({ reviewerName, reviewText, rating });
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully', reviews: desaWisata.reviews }).code(201);
@@ -183,9 +178,6 @@ module.exports = [
     method: 'POST',
     path: '/desawisata/{id}/reviews',
     handler: postReview,
-    options: {
-      pre: [ { method: authenticate } ], // Middleware untuk rute ulasan
-    },
   },
   {
     method: 'GET',
@@ -196,8 +188,5 @@ module.exports = [
     method: 'DELETE',
     path: '/desawisata/{id}/reviews/{reviewId}',
     handler: deleteReview,
-    options: {
-      pre: [ { method: authenticate } ], // Middleware untuk rute ulasan
-    },
   },
 ];
