@@ -6,8 +6,6 @@ const agrowisataRoutes = require('./routes/routes');
 const startMongoDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
     });
     console.log('Connected to MongoDB');
   } catch (err) {
