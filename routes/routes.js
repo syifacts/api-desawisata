@@ -1,7 +1,3 @@
-const DesaWisata = mongoose.model('DesaWisata', desaWisataSchema);
-
-module.exports = DesaWisata;
-
 const DesaWisata = require('../models/desawisata');
 
 // GET - Mengambil semua data desa wisata
@@ -127,31 +123,6 @@ const getReviews = async (request, h) => {
   }
 };
 
-// DELETE - Menghapus ulasan dari desa wisata berdasarkan ID ulasan
-const deleteReview = async (request, h) => {
-  const { id, reviewId } = request.params;
-
-  try {
-    const desaWisata = await DesaWisata.findById(id);
-    if (!desaWisata) {
-      return h.response({ message: 'Desa Wisata not found' }).code(404);
-    }
-
-    const reviewIndex = desaWisata.reviews.findIndex(review => review._id.toString() === reviewId);
-    if (reviewIndex === -1) {
-      return h.response({ message: 'Review not found' }).code(404);
-    }
-
-    // Menghapus ulasan
-    desaWisata.reviews.splice(reviewIndex, 1);
-    await desaWisata.save();
-
-    return h.response({ message: 'Review deleted successfully' }).code(200);
-  } catch (err) {
-    return h.response({ message: 'Error deleting review', error: err.message }).code(500);
-  }
-};
-
 module.exports = [
   {
     method: 'GET',
@@ -187,10 +158,5 @@ module.exports = [
     method: 'GET',
     path: '/desawisata/{id}/reviews',
     handler: getReviews,
-  },
-  {
-    method: 'DELETE',
-    path: '/desawisata/{id}/reviews/{reviewId}',
-    handler: deleteReview,
   },
 ];
