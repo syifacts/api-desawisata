@@ -83,10 +83,10 @@ const deleteDesaWisata = async (request, h) => {
 // POST - Menambahkan ulasan pada desa wisata
 const postReview = async (request, h) => {
   const { id } = request.params;
-  const { reviewerName, reviewText, rating, userId } = request.payload;
+  const { reviewerName, reviewText, rating } = request.payload;
 
   // Validasi input
-  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5 || !userId) {
+  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5) {
     return h.response({ message: 'Field ulasan tidak lengkap atau rating tidak valid!' }).code(400);
   }
 
@@ -96,8 +96,8 @@ const postReview = async (request, h) => {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    // Menambahkan ulasan ke array reviews dengan userId
-    desaWisata.reviews.push({ reviewerName, reviewText, rating, userId });
+    // Menambahkan ulasan ke array reviews
+    desaWisata.reviews.push({ reviewerName, reviewText, rating });
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully' }).code(201);
@@ -122,26 +122,19 @@ const getReviews = async (request, h) => {
 
 // DELETE - Menghapus ulasan berdasarkan ID desa wisata dan ID ulasan
 const deleteReview = async (request, h) => {
-  const { id, reviewId, userId } = request.params;
+  const { id, reviewId } = request.params;
   try {
     const desaWisata = await DesaWisata.findById(id);
     if (!desaWisata) {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    const review = desaWisata.reviews.find(review => review._id.toString() === reviewId);
-    if (!review) {
+    const reviewIndex = desaWisata.reviews.findIndex(review => review._id.toString() === reviewId);
+    if (reviewIndex === -1) {
       return h.response({ message: 'Review not found' }).code(404);
     }
 
-    // Hanya mengizinkan penghapusan jika userId milik review sesuai dengan user yang ingin menghapus
-    if (review.userId.toString() !== userId) {
-      return h.response({ message: 'Unauthorized' }).code(403);
-    }
-
-    // Menghapus review dari array
-    const reviewIndex = desaWisata.reviews.findIndex(review => review._id.toString() === reviewId);
-    desaWisata.reviews.splice(reviewIndex, 1); // Menghapus review
+    desaWisata.reviews.splice(reviewIndex, 1); // Menghapus review dari array
     await desaWisata.save();
 
     return h.response({ message: 'Review deleted successfully' }).code(200);
@@ -188,7 +181,7 @@ module.exports = [
   },
   {
     method: 'DELETE',
-    path: '/desawisata/{id}/review/{reviewId}/{userId}',
+    path: '/desawisata/{id}/review/{reviewId}',
     handler: deleteReview,
   },
 ];
