@@ -120,6 +120,7 @@ const getReviews = async (request, h) => {
   }
 };
 
+// DELETE - Menghapus ulasan berdasarkan ID desa wisata dan ID ulasan
 const deleteReview = async (request, h) => {
   const { id, reviewId } = request.params;
   const userId = request.auth.credentials.userId; // Ambil userId dari token atau session
