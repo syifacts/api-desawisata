@@ -1,19 +1,21 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const reviewSchema = new mongoose.Schema({
-    reviewerName: { type: String, required: true }, // Nama reviewer
-    reviewText: { type: String, required: true },   // Isi ulasan
-    rating: { type: Number, required: true, min: 1, max: 5 }, // Rating antara 1 dan 5
+const reviewSchema = new Schema({
+  reviewerName: { type: String, required: true },
+  username_review: { type: String, required: true },
+  reviewText: { type: String, required: true },
+  rating: { type: Number, required: true },
 }, { timestamps: true });
 
-const desaWisataSchema = new mongoose.Schema({
-    name: { type: String, required: true }, // Nama desa wisata
-    location: { type: String, required: true }, // Lokasi desa wisata
-    photo: { type: String, required: true }, // URL foto desa wisata
-    description: { type: String, required: true }, // Deskripsi desa wisata
-    longdesc: { type: String, required: true }, // Deskripsi panjang
-    urlvid: { type: String, required: true }, // URL video
-    reviews: [reviewSchema] // Array of reviews
+const desaWisataSchema = new Schema({
+  name: { type: String, required: true },
+  location: { type: String, required: true },
+  photo: { type: String, required: true },
+  description: { type: String, required: true },
+  longdesc: { type: String, required: true },
+  urlvid: { type: String, required: true },
+  reviews: [reviewSchema],  // Array of review objects
 }, { timestamps: true });
 
 const DesaWisata = mongoose.model('DesaWisata', desaWisataSchema);
