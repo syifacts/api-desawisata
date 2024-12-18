@@ -1,4 +1,5 @@
 const DesaWisata = require('../models/desawisata');
+const User = require('../models/User'); // Pastikan Anda memiliki model User untuk validasi username
 
 // GET - Mengambil semua data desa wisata
 const getDesaWisata = async (request, h) => {
@@ -26,15 +27,21 @@ const getDesaWisataById = async (request, h) => {
 
 // POST - Menambahkan data desa wisata
 const postDesaWisata = async (request, h) => {
-  const { name, location, photo, description, longdesc, urlvid } = request.payload;
+  const { name, location, photo, description, longdesc, urlvid, username } = request.payload;
 
   // Validasi input
-  if (!name || !location || !photo || !description || !longdesc || !urlvid) {
+  if (!name || !location || !photo || !description || !longdesc || !urlvid || !username) {
     return h.response({ message: 'Semua field wajib diisi!' }).code(400);
   }
 
   try {
-    const newDesaWisata = new DesaWisata({ name, location, photo, description, longdesc, urlvid });
+    // Validasi apakah username terdaftar
+    const user = await User.findOne({ username });
+    if (!user) {
+      return h.response({ message: 'Username tidak ditemukan!' }).code(400);
+    }
+
+    const newDesaWisata = new DesaWisata({ name, location, photo, description, longdesc, urlvid, username });
     await newDesaWisata.save();
     return h.response({ message: 'Data added successfully' }).code(201);
   } catch (err) {
@@ -45,16 +52,22 @@ const postDesaWisata = async (request, h) => {
 // PUT - Mengupdate data desa wisata berdasarkan ID
 const putDesaWisata = async (request, h) => {
   const { id } = request.params;
-  const { name, location, photo, description, longdesc, urlvid } = request.payload;
+  const { name, location, photo, description, longdesc, urlvid, username } = request.payload;
 
   // Validasi input
-  if (!name || !location || !photo || !description || !longdesc || !urlvid) {
+  if (!name || !location || !photo || !description || !longdesc || !urlvid || !username) {
     return h.response({ message: 'Semua field wajib diisi!' }).code(400);
   }
 
   try {
+    // Validasi apakah username terdaftar
+    const user = await User.findOne({ username });
+    if (!user) {
+      return h.response({ message: 'Username tidak ditemukan!' }).code(400);
+    }
+
     const updatedDesaWisata = await DesaWisata.findByIdAndUpdate(id, 
-      { name, location, photo, description, longdesc, urlvid }, 
+      { name, location, photo, description, longdesc, urlvid, username }, 
       { new: true }
     );
     if (!updatedDesaWisata) {
@@ -83,14 +96,20 @@ const deleteDesaWisata = async (request, h) => {
 // POST - Menambahkan ulasan pada desa wisata
 const postReview = async (request, h) => {
   const { id } = request.params;
-  const { reviewerName, reviewText, rating } = request.payload;
+  const { reviewerName, reviewText, rating, username } = request.payload;
 
   // Validasi input
-  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5) {
+  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5 || !username) {
     return h.response({ message: 'Field ulasan tidak lengkap atau rating tidak valid!' }).code(400);
   }
 
   try {
+    // Validasi apakah username terdaftar
+    const user = await User.findOne({ username });
+    if (!user) {
+      return h.response({ message: 'Username tidak ditemukan!' }).code(400);
+    }
+
     const desaWisata = await DesaWisata.findById(id);
     if (!desaWisata) {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
