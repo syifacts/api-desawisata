@@ -1,4 +1,5 @@
 const DesaWisata = require('../models/desawisata');
+const User = require('../models/user'); // Mengimpor model User
 
 // GET - Mengambil semua data desa wisata
 const getDesaWisata = async (request, h) => {
@@ -28,7 +29,6 @@ const getDesaWisataById = async (request, h) => {
 const postDesaWisata = async (request, h) => {
   const { name, location, photo, description, longdesc, urlvid } = request.payload;
 
-  // Validasi input
   if (!name || !location || !photo || !description || !longdesc || !urlvid) {
     return h.response({ message: 'Semua field wajib diisi!' }).code(400);
   }
@@ -42,62 +42,29 @@ const postDesaWisata = async (request, h) => {
   }
 };
 
-// PUT - Mengupdate data desa wisata berdasarkan ID
-const putDesaWisata = async (request, h) => {
-  const { id } = request.params;
-  const { name, location, photo, description, longdesc, urlvid } = request.payload;
-
-  // Validasi input
-  if (!name || !location || !photo || !description || !longdesc || !urlvid) {
-    return h.response({ message: 'Semua field wajib diisi!' }).code(400);
-  }
-
-  try {
-    const updatedDesaWisata = await DesaWisata.findByIdAndUpdate(id, 
-      { name, location, photo, description, longdesc, urlvid }, 
-      { new: true }
-    );
-    if (!updatedDesaWisata) {
-      return h.response({ message: 'Desa Wisata not found' }).code(404);
-    }
-    return h.response(updatedDesaWisata).code(200);
-  } catch (err) {
-    return h.response({ message: 'Error updating data', error: err.message }).code(500);
-  }
-};
-
-// DELETE - Menghapus data desa wisata berdasarkan ID
-const deleteDesaWisata = async (request, h) => {
-  const { id } = request.params;
-  try {
-    const deletedDesaWisata = await DesaWisata.findByIdAndDelete(id);
-    if (!deletedDesaWisata) {
-      return h.response({ message: 'Desa Wisata not found' }).code(404);
-    }
-    return h.response({ message: 'Data deleted successfully' }).code(200);
-  } catch (err) {
-    return h.response({ message: 'Error deleting data', error: err.message }).code(500);
-  }
-};
-
 // POST - Menambahkan ulasan pada desa wisata
 const postReview = async (request, h) => {
   const { id } = request.params;
-  const { reviewerName, reviewText, rating } = request.payload;
+  const { reviewerName, reviewText, rating, userId } = request.payload; // Memastikan userId ditambahkan
 
-  // Validasi input
-  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5) {
+  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5 || !userId) {
     return h.response({ message: 'Field ulasan tidak lengkap atau rating tidak valid!' }).code(400);
   }
 
   try {
+    // Validasi apakah userId valid dengan mencari di User model
+    const user = await User.findById(userId);
+    if (!user) {
+      return h.response({ message: 'User not found' }).code(404);
+    }
+
     const desaWisata = await DesaWisata.findById(id);
     if (!desaWisata) {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
     // Menambahkan ulasan ke array reviews
-    desaWisata.reviews.push({ reviewerName, reviewText, rating });
+    desaWisata.reviews.push({ reviewerName, reviewText, rating, userId });
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully' }).code(201);
@@ -109,7 +76,7 @@ const postReview = async (request, h) => {
 // DELETE - Menghapus ulasan berdasarkan ID desa wisata dan ID ulasan
 const deleteReview = async (request, h) => {
   const { id, reviewId } = request.params;
-  const { reviewerName } = request.payload; // Nama pengulas yang menghapus
+  const { userId } = request.payload; // Menggunakan userId untuk validasi
 
   try {
     const desaWisata = await DesaWisata.findById(id);
@@ -122,12 +89,11 @@ const deleteReview = async (request, h) => {
       return h.response({ message: 'Review not found' }).code(404);
     }
 
-    // Cek apakah reviewerName sama dengan nama pengulas yang ingin menghapus
-    if (review.reviewerName !== reviewerName) {
+    // Validasi apakah userId yang menghapus adalah pemilik review
+    if (review.userId.toString() !== userId) {
       return h.response({ message: 'You are not authorized to delete this review' }).code(403);
     }
 
-    // Menghapus review dari array
     review.remove();
     await desaWisata.save();
 
@@ -136,7 +102,6 @@ const deleteReview = async (request, h) => {
     return h.response({ message: 'Error deleting review', error: err.message }).code(500);
   }
 };
-
 
 // GET - Mengambil semua ulasan untuk desa wisata berdasarkan ID
 const getReviews = async (request, h) => {
@@ -167,16 +132,6 @@ module.exports = [
     method: 'POST',
     path: '/desawisata',
     handler: postDesaWisata,
-  },
-  {
-    method: 'PUT',
-    path: '/desawisata/{id}',
-    handler: putDesaWisata,
-  },
-  {
-    method: 'DELETE',
-    path: '/desawisata/{id}',
-    handler: deleteDesaWisata,
   },
   {
     method: 'POST',
