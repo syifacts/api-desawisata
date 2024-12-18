@@ -1,11 +1,14 @@
 const mongoose = require('mongoose');
 
+// Schema untuk review
 const reviewSchema = new mongoose.Schema({
     reviewerName: { type: String, required: true }, // Nama reviewer
     reviewText: { type: String, required: true },   // Isi ulasan
     rating: { type: Number, required: true, min: 1, max: 5 }, // Rating antara 1 dan 5
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Menyimpan userId dari pengulas
 }, { timestamps: true });
 
+// Schema untuk desa wisata
 const desaWisataSchema = new mongoose.Schema({
     name: { type: String, required: true }, // Nama desa wisata
     location: { type: String, required: true }, // Lokasi desa wisata
@@ -16,6 +19,7 @@ const desaWisataSchema = new mongoose.Schema({
     reviews: [reviewSchema] // Array of reviews
 }, { timestamps: true });
 
+// Model DesaWisata
 const DesaWisata = mongoose.model('DesaWisata', desaWisataSchema);
 
 module.exports = DesaWisata;

@@ -106,6 +106,38 @@ const postReview = async (request, h) => {
   }
 };
 
+// DELETE - Menghapus ulasan berdasarkan ID desa wisata dan ID ulasan
+const deleteReview = async (request, h) => {
+  const { id, reviewId } = request.params;
+  const { reviewerName } = request.payload; // Nama pengulas yang menghapus
+
+  try {
+    const desaWisata = await DesaWisata.findById(id);
+    if (!desaWisata) {
+      return h.response({ message: 'Desa Wisata not found' }).code(404);
+    }
+
+    const review = desaWisata.reviews.id(reviewId);
+    if (!review) {
+      return h.response({ message: 'Review not found' }).code(404);
+    }
+
+    // Cek apakah reviewerName sama dengan nama pengulas yang ingin menghapus
+    if (review.reviewerName !== reviewerName) {
+      return h.response({ message: 'You are not authorized to delete this review' }).code(403);
+    }
+
+    // Menghapus review dari array
+    review.remove();
+    await desaWisata.save();
+
+    return h.response({ message: 'Review deleted successfully' }).code(200);
+  } catch (err) {
+    return h.response({ message: 'Error deleting review', error: err.message }).code(500);
+  }
+};
+
+
 // GET - Mengambil semua ulasan untuk desa wisata berdasarkan ID
 const getReviews = async (request, h) => {
   const { id } = request.params;
@@ -117,29 +149,6 @@ const getReviews = async (request, h) => {
     return h.response(desaWisata.reviews).code(200);
   } catch (err) {
     return h.response({ message: 'Error fetching reviews', error: err.message }).code(500);
-  }
-};
-
-// DELETE - Menghapus ulasan berdasarkan ID desa wisata dan ID ulasan
-const deleteReview = async (request, h) => {
-  const { id, reviewId } = request.params;
-  try {
-    const desaWisata = await DesaWisata.findById(id);
-    if (!desaWisata) {
-      return h.response({ message: 'Desa Wisata not found' }).code(404);
-    }
-
-    const reviewIndex = desaWisata.reviews.findIndex(review => review._id.toString() === reviewId);
-    if (reviewIndex === -1) {
-      return h.response({ message: 'Review not found' }).code(404);
-    }
-
-    desaWisata.reviews.splice(reviewIndex, 1); // Menghapus review dari array
-    await desaWisata.save();
-
-    return h.response({ message: 'Review deleted successfully' }).code(200);
-  } catch (err) {
-    return h.response({ message: 'Error deleting review', error: err.message }).code(500);
   }
 };
 
