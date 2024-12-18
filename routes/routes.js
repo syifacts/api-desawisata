@@ -123,27 +123,18 @@ const getReviews = async (request, h) => {
 // DELETE - Menghapus ulasan berdasarkan ID desa wisata dan ID ulasan
 const deleteReview = async (request, h) => {
   const { id, reviewId } = request.params;
-  const userId = request.auth.credentials.userId; // Ambil userId dari token atau session
-
   try {
     const desaWisata = await DesaWisata.findById(id);
     if (!desaWisata) {
       return h.response({ message: 'Desa Wisata not found' }).code(404);
     }
 
-    const review = desaWisata.reviews.find(review => review._id.toString() === reviewId);
-    if (!review) {
+    const reviewIndex = desaWisata.reviews.findIndex(review => review._id.toString() === reviewId);
+    if (reviewIndex === -1) {
       return h.response({ message: 'Review not found' }).code(404);
     }
 
-    // Cek apakah user yang menghapus adalah reviewer
-    if (review.reviewerId !== userId) {
-      return h.response({ message: 'Unauthorized to delete this review' }).code(403);
-    }
-
-    // Hapus review dari array
-    const reviewIndex = desaWisata.reviews.indexOf(review);
-    desaWisata.reviews.splice(reviewIndex, 1); // Menghapus review
+    desaWisata.reviews.splice(reviewIndex, 1); // Menghapus review dari array
     await desaWisata.save();
 
     return h.response({ message: 'Review deleted successfully' }).code(200);
@@ -151,7 +142,6 @@ const deleteReview = async (request, h) => {
     return h.response({ message: 'Error deleting review', error: err.message }).code(500);
   }
 };
-
 
 module.exports = [
   {
