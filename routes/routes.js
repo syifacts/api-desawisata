@@ -83,10 +83,10 @@ const deleteDesaWisata = async (request, h) => {
 // POST - Menambahkan ulasan pada desa wisata
 const postReview = async (request, h) => {
   const { id } = request.params;
-  const { reviewerName, username_review, reviewText, rating } = request.payload;
+  const { reviewerName, reviewText, rating } = request.payload;
 
   // Validasi input
-  if (!reviewerName || !username_review || !reviewText || !rating || rating < 1 || rating > 5) {
+  if (!reviewerName || !reviewText || !rating || rating < 1 || rating > 5) {
     return h.response({ message: 'Field ulasan tidak lengkap atau rating tidak valid!' }).code(400);
   }
 
@@ -97,7 +97,7 @@ const postReview = async (request, h) => {
     }
 
     // Menambahkan ulasan ke array reviews
-    desaWisata.reviews.push({ reviewerName, username_review, reviewText, rating });
+    desaWisata.reviews.push({ reviewerName, reviewText, rating });
     await desaWisata.save();
 
     return h.response({ message: 'Review added successfully' }).code(201);
