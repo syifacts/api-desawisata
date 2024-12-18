@@ -1,5 +1,5 @@
 const DesaWisata = require('../models/desawisata');
-const User = require('../models/User'); // Pastikan Anda memiliki model User untuk validasi username
+const User = require('../models/user'); // Pastikan Anda memiliki model User untuk validasi username
 
 // GET - Mengambil semua data desa wisata
 const getDesaWisata = async (request, h) => {
